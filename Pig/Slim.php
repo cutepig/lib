@@ -10,11 +10,11 @@
 // PHP_VERSION_ID is available as of PHP 5.2.7, if our 
 // version is lower than that, then emulate it
 if (!defined('PHP_VERSION_ID')) {
-    $version = explode('.', PHP_VERSION);
+    $version = explode('.', substr(PHP_VERSION,0,strpos(PHP_VERSION, '-')));
     define('PHP_VERSION_ID', ($version[0] * 10000 + $version[1] * 100 + $version[2]));
 }
 
-if(PHP_VERSION_ID >= 50500) {
+if(PHP_VERSION_ID >= 50400) {
 	class Pig_Slim {
 		private $app = null;
 

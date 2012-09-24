@@ -55,4 +55,11 @@ class Pig {
 			throw $e;	// FIXME:
 		}
     }
+
+    // Helper to bind values of an object to pdo statement
+	static function bindParams($stmt, $obj) {
+		foreach($obj as $key => $value) {
+			$stmt->bindValue(":$key", $value);
+		}
+	}
 }
