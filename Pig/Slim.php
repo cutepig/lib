@@ -23,28 +23,28 @@ if(PHP_VERSION_ID >= 50400) {
 		}
 
 		public function get($route, $classname, $method='get') {
-			$this->app->get($route, function() use ($classname, $method) {
+			return $this->app->get($route, function() use ($classname, $method) {
 				$obj = new $classname($this->app);
 				self::handleMethodCall($obj, $method, func_num_args(), func_get_args());
 			});
 		}
 
 		public function post($route, $classname, $method='post') {
-			$this->app->post($route, function() use ($classname, $method) {
+			return $this->app->post($route, function() use ($classname, $method) {
 				$obj = new $classname($this->app);
 				self::handleMethodCall($obj, $method, func_num_args(), func_get_args());
 			});
 		}
 
 		public function put($route, $classname, $method='put') {
-			$this->app->put($route, function() use ($classname, $method) {
+			return $this->app->put($route, function() use ($classname, $method) {
 				$obj = new $classname($this->app);
 				self::handleMethodCall($obj, $method, func_num_args(), func_get_args());
 			});
 		}
 
 		public function delete($route, $classname, $method='delete') {
-			$this->app->delete($route, function() use ($classname, $method) {
+			return $this->app->delete($route, function() use ($classname, $method) {
 				$obj = new $classname($this->app);
 				self::handleMethodCall($obj, $method, func_num_args(), func_get_args());
 			});
@@ -77,7 +77,7 @@ if(PHP_VERSION_ID >= 50400) {
 		public function get($route, $classname, $method='get') {
 			$self = $this;
 			$app = $this->app;
-			$this->app->get($route, function() use ($self, $app, $classname, $method) {
+			return $this->app->get($route, function() use ($self, $app, $classname, $method) {
 				$obj = new $classname($app);
 				$self->handleMethodCall($obj, $method, func_num_args(), func_get_args());
 			});
@@ -86,7 +86,7 @@ if(PHP_VERSION_ID >= 50400) {
 		public function post($route, $classname, $method='post') {
 			$self = $this;
 			$app = $this->app;
-			$this->app->post($route, function() use ($self, $app, $classname, $method) {
+			return $this->app->post($route, function() use ($self, $app, $classname, $method) {
 				$obj = new $classname($app);
 				$self->handleMethodCall($obj, $method, func_num_args(), func_get_args());
 			});
@@ -95,7 +95,7 @@ if(PHP_VERSION_ID >= 50400) {
 		public function put($route, $classname, $method='put') {
 			$self = $this;
 			$app = $this->app;
-			$this->app->put($route, function() use ($self, $app, $classname, $method) {
+			return $this->app->put($route, function() use ($self, $app, $classname, $method) {
 				$obj = new $classname($app);
 				$self->handleMethodCall($obj, $method, func_num_args(), func_get_args());
 			});
@@ -104,7 +104,7 @@ if(PHP_VERSION_ID >= 50400) {
 		public function delete($route, $classname, $method='delete') {
 			$self = $this;
 			$app = $this->app;
-			$this->app->delete($route, function() use ($self, $app, $classname, $method) {
+			return $this->app->delete($route, function() use ($self, $app, $classname, $method) {
 				$obj = new $classname($app);
 				$self->handleMethodCall($obj, $method, func_num_args(), func_get_args());
 			});
