@@ -7,7 +7,7 @@ class Pig_Autoloader {
 			// debug('spl_autoload_register: ' . $class);
 			// Special feature.. for class Class, include Class/Class.php (or Class/index.php?)
 			if(strpos($class, '\\') != false)
-				$path = $class . '.php';
+				$path = str_replace('\\', DIRECTORY_SEPARATOR, $class) . '.php';
 			//else if(strpos($class, '_') == false)
 			//	$path = $class . DIRECTORY_SEPARATOR . $class . '.php';
 			else
