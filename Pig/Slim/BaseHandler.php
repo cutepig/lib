@@ -2,19 +2,23 @@
 
 class Pig_Slim_BaseHandler {
 	protected $pdo;
+	protected $doPdo;
 	protected $app;
 	protected $db;
 
 	// protected $config;
 
-	function __construct($app) {
+	function __construct($app, $doPdo=true) {
 		$this->app = $app;
 		$this->request = $app->request();
 		$this->response = $app->response();
 		$this->view = new stdClass;
-		$this->pdo = Pig::PDOFromConfig();
-		if(!$this->pdo)
-			return;
+		$this->doPdo = $doPdo;
+		if($doPdo) {
+			$this->pdo = Pig::PDOFromConfig();
+			if(!$this->pdo)
+				return;
+		}
 
 		// ARGH do some stuff to test the connection
 		/*
@@ -89,7 +93,7 @@ class Pig_Slim_BaseHandler {
 	 */
 
 	public function valid() {
-		return $this->pdo != null;
+		return $doPdo ? ($this->pdo != null) : true;
 	}
 
 	// Implement custom initialization with this function in derived handler
