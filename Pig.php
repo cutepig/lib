@@ -57,6 +57,23 @@ class Pig {
 		return ($cs == $oc ? $id : false);
 	}
 
+	public static function signature($method, $url, $params, $secret) {
+		$base = urlencode($method) . '&' . urlencode($url) . '&';
+		// Order the array by keys, PHP doesn't support multiple indices with same key
+		$_params = array_slice($params, 0);
+		ksort($_params);
+		$len = count($_params);
+		$count = 0;
+		foreach($_params as $key => $value) {
+			$base .= urlencode("{$key}={$value}");
+			$count++;
+			if($count < $len)
+				$base .= urlencode('&');
+		}
+		debug($base);
+		return base64_encode(hash_hmac('sha1', $base, $secret));
+	}
+
     public static function PDOFromConfig() {
     	// Create PDO
 		// dsn = "mysql:host={$hostname}:port={$port}:dbname={$dbname}";
