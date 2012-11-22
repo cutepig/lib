@@ -4,7 +4,9 @@ class Pig_Slim_BaseHandler {
 	protected $pdo;
 	protected $doPdo;
 	protected $app;
-	protected $db;
+	protected $request;
+	protected $response;
+	protected $view;
 
 	// protected $config;
 
@@ -116,5 +118,14 @@ class Pig_Slim_BaseHandler {
 
 	public function render($template) {
 		$this->app->render($template, get_object_vars($this->view));
+	}
+
+	// Helper redirect function that redirects to this webapps resource
+	public function redirect($resource) {
+		$this->response->redirect($this->request->getRootUri() . $resource);
+	}
+
+	public function getFullResourceUri() {
+		return $this->request->getRootUri() . $this->request->getResourceUri();
 	}
 }
