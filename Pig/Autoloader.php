@@ -2,14 +2,26 @@
 
 // YAAL -> Yet Another AutoLoader
 class Pig_Autoloader {
-	public static function init() {
-		spl_autoload_register(function($class) {
+	public static function init($namespaces=null) {
+		$nss = $namespaces ? unserialize(serialize($namespaces)) : null;
+		spl_autoload_register(function($class) use ($nss) {
+			// Check if we have registered namespaces and then check against them.
+			// Otherwise autoload everything
+			if($nss) {
+				$found = false;
+				foreach($nss as $ns) {
+					if(substr($class, 0, strlen($ns)) == $ns) {
+						$found = true;
+						break;
+					}
+				}
+				if(!$found)
+					return;
+			}
 			// debug('spl_autoload_register: ' . $class);
-			// Special feature.. for class Class, include Class/Class.php (or Class/index.php?)
+			// "New way" class naming uses slashes instead of underscores
 			if(strpos($class, '\\') != false)
 				$path = str_replace('\\', DIRECTORY_SEPARATOR, $class) . '.php';
-			//else if(strpos($class, '_') == false)
-			//	$path = $class . DIRECTORY_SEPARATOR . $class . '.php';
 			else
 				$path = str_replace('_', DIRECTORY_SEPARATOR, $class) . '.php';
 			include $path;
@@ -21,7 +33,7 @@ class Pig_Autoloader {
 	/*
 	Logic:
 		We are supporting both styles of Path_Class and Path\Class, but to verify that the directory exists, we need to
-		scan all directories in include path
+		scan all directories in include paths
 
 		$subpath = ^^
 		$paths = explode(PATH_SEPARATOR, get_include_path());
@@ -42,6 +54,9 @@ function debug() {
 	foreach($args as $arg) {
 		if(is_object($arg) || is_array($arg))
 			$arg = print_r($arg, true);
-		echo "<pre>{$arg}</pre>\n";
+		if(PHP_SAPI === 'cli')
+			echo "{$arg}\n";
+		else
+			echo "<pre>{$arg}</pre>\n";
 	}
 }
