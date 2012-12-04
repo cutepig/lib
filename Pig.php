@@ -92,7 +92,7 @@ class Pig {
 		else
 			throw new Exception('Pig currently supports only mysql and sqlsrv drivers');	// FIXME:
 
-		debug($dsn);
+		// debug($dsn);
 		try {
 			if($driver == "mysql")
 				return new PDO($dsn, $user, $password, array(PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8"));
@@ -102,7 +102,7 @@ class Pig {
 			// FIXME: Don't be too verbose about this in production stage
 			// FIXME: Send an error mail somehwere about this incident
 			// $this->json(array('error'=>$e->getMessage()));
-			debug($e->getMessage());
+			// debug($e->getMessage());
 			// return null;
 			throw $e;	// FIXME:
 		}
