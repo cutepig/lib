@@ -76,17 +76,28 @@ class Pig {
 
     public static function PDOFromConfig() {
     	// Create PDO
-		// dsn = "mysql:host={$hostname}:port={$port}:dbname={$dbname}";
+		$driver = Pig_Config::get('db.driver', 'mysql');
 		$hostname = Pig_Config::get('db.hostname', '127.0.0.1');
 		$port = Pig_Config::get('db.port', 3306);
 		$dbname = Pig_Config::get('db.database', '');
-		$user = Pig_Config::get('db.user', 'root');
+		$user = Pig_Config::get('db.username', 'root');
 		$password = Pig_Config::get('db.password', '');
 
-		$dsn = "mysql:host={$hostname};port={$port};dbname={$dbname}";
+		// Head on to http://www.microsoft.com/en-us/download/details.aspx?id=20098 to download SQLSRV drivers!
+		
+		if($driver == "mysql")
+			$dsn = "{$driver}:host={$hostname};port={$port};dbname={$dbname}";
+		else if($driver == "sqlsrv")
+			$dsn = "{$driver}:server={$hostname};Database={$dbname}";
+		else
+			throw new Exception('Pig currently supports only mysql and sqlsrv drivers');	// FIXME:
+
 		debug($dsn);
 		try {
-			return new PDO($dsn, $user, $password, array(PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8"));
+			if($driver == "mysql")
+				return new PDO($dsn, $user, $password, array(PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8"));
+			else if($driver == "sqlsrv")
+				return new PDO($dsn, $user, $password, array(PDO::SQLSRV_ENCODING_UTF8 => 1));
 		} catch(PDOException $e) {
 			// FIXME: Don't be too verbose about this in production stage
 			// FIXME: Send an error mail somehwere about this incident
