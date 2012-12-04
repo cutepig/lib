@@ -1,6 +1,6 @@
 <?php
 
-class Pig {
+class Pig_Pig {
 	// Misc utilities
 	public static function collect($collection, $property) {
         $values = array();
