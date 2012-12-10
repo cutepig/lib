@@ -57,7 +57,7 @@ class Pig_Pig {
 		return ($cs == $oc ? $id : false);
 	}
 
-	public static function signature($method, $url, $params, $secret) {
+	public static function signature($method, $url, $params, $secret, $alg='sha1') {
 		$base = urlencode($method) . '&' . urlencode($url) . '&';
 		// Order the array by keys, PHP doesn't support multiple indices with same key
 		$_params = array_slice($params, 0);
@@ -70,8 +70,8 @@ class Pig_Pig {
 			if($count < $len)
 				$base .= urlencode('&');
 		}
-		debug($base);
-		return base64_encode(hash_hmac('sha1', $base, $secret));
+		// debug($base);
+		return base64_encode(hash_hmac($alg, $base, $secret));
 	}
 
     public static function PDOFromConfig() {
