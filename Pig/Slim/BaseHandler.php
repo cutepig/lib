@@ -17,7 +17,7 @@ class Pig_Slim_BaseHandler {
 		$this->view = new stdClass;
 		$this->doPdo = $doPdo;
 		if($doPdo) {
-			$this->pdo = Pig::PDOFromConfig();
+			$this->pdo = Pig_Pig::PDOFromConfig();
 			if(!$this->pdo)
 				return;
 		}
@@ -94,7 +94,7 @@ class Pig_Slim_BaseHandler {
 	 *		PUBLIC / PROTECTED FUNCTIONS
 	 */
 
-	public function valid() {
+	protected function valid() {
 		return $doPdo ? ($this->pdo != null) : true;
 	}
 
@@ -116,16 +116,16 @@ class Pig_Slim_BaseHandler {
 		return json_decode($json);
 	}
 
-	public function render($template) {
+	protected function render($template) {
 		$this->app->render($template, get_object_vars($this->view));
 	}
 
 	// Helper redirect function that redirects to this webapps resource
-	public function redirect($resource) {
+	protected function redirect($resource) {
 		$this->response->redirect($this->request->getRootUri() . $resource);
 	}
 
-	public function getFullResourceUri() {
+	protected function getFullResourceUri() {
 		return $this->request->getRootUri() . $this->request->getResourceUri();
 	}
 }
