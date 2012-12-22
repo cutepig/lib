@@ -46,10 +46,16 @@ class Pig_Autoloader {
 // Dirty hack but thats OK, since require 'Pig/Autoloader' is a must in here,
 // this comes in automagically!
 function debug() {
+	// Do we debug?
 	if(defined('PIG_ENVIRONMENT') && PIG_ENVIRONMENT != 'devel')
 		return;
 	if(defined('PIG_DEBUG') && PIG_DEBUG != true)
 		return;
+	
+	// Initialize session key
+	if(PHP_SAPI != 'cli' && !isset($_SESSION['_debug_']))
+		$_SESSION['_debug_'] = '';
+
 	$args = func_get_args();
 	foreach($args as $arg) {
 		if(is_object($arg) || is_array($arg))
@@ -57,6 +63,6 @@ function debug() {
 		if(PHP_SAPI === 'cli')
 			echo "{$arg}\n";
 		else
-			echo "<pre>{$arg}</pre>\n";
+			$_SESSION['_debug_'] .= "<pre>{$arg}</pre>\n";
 	}
 }

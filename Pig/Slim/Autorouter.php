@@ -96,13 +96,8 @@ class Pig_Slim_Autorouter {
 
 		// Load the handler class or let autoloader take care of it
 		$filename = "{$this->pathToHandlers}/{$handler}.php";
-		debug(array(
-			'pathToHandlers' => $this->pathToHandlers,
-			'class_exists' => class_exists($handler),
-			'file_exists' => $filename
-		));
 		if($this->pathToHandlers && !class_exists($handler) && file_exists($filename)) {
-			debug("Including $filename");
+			// debug("Including $filename");
 			include($filename);
 		}
 
@@ -122,6 +117,11 @@ class Pig_Slim_Autorouter {
 				else
 					call_user_func(array($obj, $fn), $parameters[$i]);
 
+				// Emit debug after the handler has processed its output
+				if(isset($_SESSION['_debug_'])) {
+					echo $_SESSION['_debug_'];
+					unset($_SESSION['_debug_']);
+				}
 				return;
 			}
 		}
