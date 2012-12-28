@@ -47,9 +47,9 @@ class Pig_Autoloader {
 // this comes in automagically!
 function debug() {
 	// Do we debug?
-	if(defined('PIG_ENVIRONMENT') && PIG_ENVIRONMENT != 'devel')
+	if(!defined('PIG_ENVIRONMENT') || PIG_ENVIRONMENT != 'devel')
 		return;
-	if(defined('PIG_DEBUG') && PIG_DEBUG != true)
+	if(!defined('PIG_DEBUG') || !PIG_DEBUG)
 		return;
 	
 	// Initialize session key
