@@ -11,10 +11,22 @@ class Pig_Slim_BaseHandler {
 	// protected $config;
 
 	function __construct($app, $doPdo=true) {
+		//
+		// Slim
 		$this->app = $app;
 		$this->request = $app->request();
 		$this->response = $app->response();
+		
+		//
+		// Twig
 		$this->view = new stdClass;
+		$this->view->common = new stdClass;
+		$this->view->common->rootUri = $this->request->getUrl() . $this->request->getRootUri();
+		$this->view->common->pageUri = $this->request->getResourceUri();
+		$this->view->actions = new stdClass;
+
+		//
+		// PDO
 		$this->doPdo = $doPdo;
 		if($doPdo) {
 			$this->pdo = Pig_Pig::PDOFromConfig();
@@ -29,6 +41,8 @@ class Pig_Slim_BaseHandler {
 		debug($stmt->fetchAll());
 		*/
 
+		//
+		// Child
 		$this->init();
 	}
 
