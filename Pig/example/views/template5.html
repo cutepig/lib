@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<meta name="keywords" content="">
+		<meta name="description" content="">
+		<meta name="author" content="">
+		<title>{% block title %}{% endblock %}</title>
+		<base href="{{common.rootUri}}/">
+		<link rel="stylesheet" type="text/css" media="screen" href="css/style.css">
+		<!-- <link rel="alternative stylesheet" type="text/css" media="screen" href="css/accessibility.css"> -->
+		<link rel="icon" type="image/x-icon" href="favicon.ico">
+		<!-- <script type="text/javascript" src="js/global.js"></script> -->
+		<!-- <script type="text/javascript" src="js/#.js"></script> -->
+
+		{% block header %}{% endblock %}
+	</head>
+ 
+	<body>
+		<header>
+			<!-- insert logo here -->
+			<nav>
+				<ul>
+				</ul>
+			</nav>
+		</header>
+
+		<section class="content">
+			{% block content %}
+			{% endblock %}
+		</section>
+
+		<footer></footer>
+	</body>
+</html>
