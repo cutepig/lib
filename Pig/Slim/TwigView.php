@@ -10,6 +10,10 @@ class Pig_Slim_TwigView extends \Slim\View
 		// FIXME: check if we can have object as $this->data, then convert to array in here?
 		echo $this->twig->render($template, $this->data);
 	}
+
+	public function getTwig() {
+		return $this->twig;
+	}
 }
 
 /*
