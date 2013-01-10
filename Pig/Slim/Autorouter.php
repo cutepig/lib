@@ -68,17 +68,17 @@ class Pig_Slim_Autorouter {
 	public function requestHandler($controller=null, $action=null, $parameter=null) {
 		$method = strtolower($this->app->request()->getMethod());
 
-		if(is_null($controller)) {	// handler for /
+		if(is_null($controller) || preg_match("/^#/", $controller)) {	// handler for /
 			$handler = 'IndexHandler';
 			$functions = array("{$method}Index", 'index');
 			$parameters = array(null, null);
 		}
-		else if(is_null($action)) {	// handler for /controller
+		else if(is_null($action) || preg_match("/^#/", $action)) {	// handler for /controller
 			$handler = $this->capitalizeName($controller, true) . 'Handler';	// FIXME: capitalize
 			$functions = array("{$method}Index", 'index');
 			$parameters = array(null, null);
 		}
-		else if(is_null($parameter)) {	// handler for /controller/action or /controller/parameter
+		else if(is_null($parameter) || preg_match("/^#/", $parameter)) {	// handler for /controller/action or /controller/parameter
 			$handler = $this->capitalizeName($controller, true) . 'Handler';
 			$functions = array("{$method}{$this->capitalizeName($action, true)}", $this->capitalizeName($action, false), "{$method}Index", 'index');
 			$parameters = array(null, null, $action, $action);
@@ -92,6 +92,8 @@ class Pig_Slim_Autorouter {
 		if(count($functions) != count($parameters))
 			$this->app->notFound();
 		
+		// debug(array('handler'=>$handler,'functions'=>$functions,'parameters'=>$parameters));
+
 		// FIXME: class_exists calls autoloader by default, omitting it would mean that we would handle the loading ourselves
 
 		// Load the handler class or let autoloader take care of it
@@ -126,6 +128,10 @@ class Pig_Slim_Autorouter {
 			}
 		}
 		
+		if(isset($_SESSION['_debug_'])) {
+			echo $_SESSION['_debug_'];
+			unset($_SESSION['_debug_']);
+		}
 		$this->app->notFound();
 	}
 
