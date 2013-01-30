@@ -62,13 +62,16 @@ function debug() {
 	// From PHP 5.3.6 you should give (DEBUG_BACKTRACE_IGNORE_ARGS)
 	// From PHP 5.4.0 you should give (DEBUG_BACKTRACE_IGNORE_ARGS, 2)
 	$stack = debug_backtrace(/*DEBUG_BACKTRACE_IGNORE_ARGS, 2*/);
+	$time = round(microtime(true)*1000);
 	$args = func_get_args();
+	if(!count($args))
+		$args = array('');
 	foreach($args as $arg) {
 		if(is_object($arg) || is_array($arg))
 			$arg = print_r($arg, true);
 		if(PHP_SAPI === 'cli')
 			echo "{$arg}\n";
 		else
-			$_SESSION['_debug_'] .= "<pre>{$stack[0]['file']}:{$stack[0]['line']} {$arg}</pre>\n";
+			$_SESSION['_debug_'] .= "<pre>{$stack[0]['file']}:{$stack[0]['line']} $time\n{$arg}</pre>\n";
 	}
 }
