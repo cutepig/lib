@@ -3,6 +3,9 @@
 // YAAL -> Yet Another AutoLoader
 class Pig_Autoloader {
 	public static function init($namespaces=null) {
+		// This might cause problems if its forgotten that _debug_ is cleared in here :)
+		if(isset($_SESSION['_debug_']))
+			unset($_SESSION['_debug_']);
 		$nss = $namespaces ? unserialize(serialize($namespaces)) : null;
 		spl_autoload_register(function($class) use ($nss) {
 			// Check if we have registered namespaces and then check against them.
@@ -56,6 +59,9 @@ function debug() {
 	if(PHP_SAPI != 'cli' && !isset($_SESSION['_debug_']))
 		$_SESSION['_debug_'] = '';
 
+	// From PHP 5.3.6 you should give (DEBUG_BACKTRACE_IGNORE_ARGS)
+	// From PHP 5.4.0 you should give (DEBUG_BACKTRACE_IGNORE_ARGS, 2)
+	$stack = debug_backtrace(/*DEBUG_BACKTRACE_IGNORE_ARGS, 2*/);
 	$args = func_get_args();
 	foreach($args as $arg) {
 		if(is_object($arg) || is_array($arg))
@@ -63,6 +69,6 @@ function debug() {
 		if(PHP_SAPI === 'cli')
 			echo "{$arg}\n";
 		else
-			$_SESSION['_debug_'] .= "<pre>{$arg}</pre>\n";
+			$_SESSION['_debug_'] .= "<pre>{$stack[0]['file']}:{$stack[0]['line']} {$arg}</pre>\n";
 	}
 }
