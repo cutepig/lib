@@ -6,11 +6,17 @@
  */
 
 //
+// Environment bootstrap
+$ini = parse_ini_file('../environment.ini');
+$environment = $ini && isset($ini['environment']) ? $ini['environment'] : 'devel';
+$debug = $ini && isset($ini['debug']) ? ($ini['debug'] != '0') : false;
+
+//
 // Setup
 if(!defined('PIG_ENVIRONMENT'))
-	define('PIG_ENVIRONMENT', 'devel');	// devel, qa or prod
+	define('PIG_ENVIRONMENT', $environment);	// devel, qa or prod
 if(!defined('PIG_DEBUG'))
-	define('PIG_DEBUG', true);
+	define('PIG_DEBUG', $debug);
 
 //
 // PHP Error reporting
