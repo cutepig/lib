@@ -121,7 +121,7 @@ class Pig_Pig {
 		$dom = new DOMDocument('1.0', 'utf-8');
 		$root = $dom->createElement('root');	// Or whatever you want
 
-		Pig_Pig::serializeToXml_DOM($data, $root);
+		Pig_Pig::serializeToXml_DOM($data, $root, 'root');
 
 		$dom->appendChild($root);
 
@@ -135,7 +135,7 @@ class Pig_Pig {
 
 		// Additional fields
 		$header = $dom->createElement('header');
-		Pig_Pig::serializeToXml_DOM($this->header, $header);
+		Pig_Pig::serializeToXml_DOM($this->header, $header, 'header');
 		$root->appendChild($header);
 
 		$dom->appendChild($root);
@@ -169,6 +169,9 @@ class Pig_Pig {
 					$xml->appendChild($elem);
 				}
 			}
+		}
+		else if(is_string($object) || is_numeric($object)) {
+			$xml->appendChild($xml->ownerDocument->createTextNode($object));
 		}
 	}
 }
