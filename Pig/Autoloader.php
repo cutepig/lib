@@ -75,3 +75,12 @@ function debug() {
 			$_SESSION['_debug_'] .= "<pre>{$stack[0]['file']}:{$stack[0]['line']} $time\n{$arg}</pre>\n";
 	}
 }
+
+/*
+ *	Dirty hack pt.2, define PHP_VERSION_ID if it is not defined.
+ *	Example from http://php.net/manual/en/function.phpversion.php
+ */
+if (!defined('PHP_VERSION_ID')) {
+	$version = explode('.', PHP_VERSION);
+	define('PHP_VERSION_ID', ($version[0] * 10000 + $version[1] * 100 + $version[2]));
+}
