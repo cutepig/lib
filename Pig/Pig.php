@@ -114,4 +114,61 @@ class Pig_Pig {
 			$stmt->bindValue(":$key", $value);
 		}
 	}
+
+	/*
+		Usage of serializeToXml_DOM
+
+		$dom = new DOMDocument('1.0', 'utf-8');
+		$root = $dom->createElement('root');	// Or whatever you want
+
+		Pig_Pig::serializeToXml_DOM($data, $root);
+
+		$dom->appendChild($root);
+
+		$xml = $dom->saveXML()
+
+		//
+		// OR WITH ADDITIONAL DATA
+
+		$dom = new DOMDocument('1.0', 'utf-8');
+		$root = $dom->createElement('root');	// Or whatever you want
+
+		// Additional fields
+		$header = $dom->createElement('header');
+		Pig_Pig::serializeToXml_DOM($this->header, $header);
+		$root->appendChild($header);
+
+		$dom->appendChild($root);
+
+		$xml = $dom->saveXML();
+
+	*/
+	// This version uses DOM api
+	static function serializeToXml_DOM($object, $xml, $upperkey=null) {
+		if(is_array($object)) {
+			foreach($object as $value) {
+				$elem = $xml->ownerDocument->createElement($upperkey);
+				if(is_string($value) || is_numeric($value))	// i.e. simple element
+					$elem->appendChild($xml->ownerDocument->createTextNode($value));
+				else
+					self::serializeToXml_DOM($value, $elem, $upperkey);
+				$xml->appendChild($elem);
+			}
+		}
+		else if(is_object($object)) {
+			foreach($object as $key => $value) {
+				if(is_array($value)) { // Dont create a child-node explicitly
+					self::serializeToXml_DOM($value, $xml, $key);
+				}
+				else {
+					$elem = $xml->ownerDocument->createElement($key);
+					if(is_string($value) || is_numeric($value))	// i.e. simple element
+						$elem->appendChild($xml->ownerDocument->createTextNode($value));
+					else
+						self::serializeToXml_DOM($value, $elem, $key);
+					$xml->appendChild($elem);
+				}
+			}
+		}
+	}
 }
