@@ -10,7 +10,7 @@ class Pig_Slim_BaseHandler {
 
 	// protected $config;
 
-	function __construct($app, $doPdo=true) {
+	public function __construct($app, $doPdo=true) {
 		//
 		// Slim
 		$this->app = $app;
@@ -53,7 +53,7 @@ class Pig_Slim_BaseHandler {
 	 *
 	 * @return string Indented version of the original JSON string.
 	 */
-	static private function indent($json) {
+	static protected function indent($json) {
 
 	    $result      = '';
 	    $pos         = 0;
