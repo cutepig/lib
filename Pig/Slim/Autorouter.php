@@ -136,7 +136,9 @@ class Pig_Slim_Autorouter {
 	}
 
 	// Requires the directory of handlers as parameter
-	public static function debugListHandlers($pathToHandlers) {
+	// Returns list of strings of form "METHOD url"
+	public static function getHandlers($pathToHandlers) {
+		$handlers = array();
 		$dir = opendir($pathToHandlers);
 		while(($entry = readdir($dir)) != false) {
 			$file = $pathToHandlers . '/' . $entry;
@@ -171,11 +173,19 @@ class Pig_Slim_Autorouter {
 					foreach($methods as $method) {
 						if($method[1] == 'index')
 							$method[1] = '';
-						debug("{$method[0]} /{$handler}/{$method[1]}");
+						$handlers[] = "{$method[0]} /{$handler}/{$method[1]}";
 					}
 				}
 			}
 		}
+
+		return $handlers;
+	}
+
+	public static function debugListHandlers($pathToHandlers) {
+		$handlers = self::getHandlers($pathToHandlers);
+		foreach($handlers as $handler)
+			debug($handler);
 	}
 
 	// If isController is true, capitalize the first letter, else lowercase the first letter
