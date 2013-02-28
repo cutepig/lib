@@ -88,7 +88,7 @@ class Pig_Pig {
 		if($driver == "mysql")
 			$dsn = "{$driver}:host={$hostname};port={$port};dbname={$dbname}";
 		else if($driver == "sqlsrv")
-			$dsn = "{$driver}:server={$hostname};Database={$dbname}";
+			$dsn = "{$driver}:server={$hostname},{$port};Database={$dbname}";
 		else
 			throw new Exception('Pig currently supports only mysql and sqlsrv drivers');	// FIXME:
 
