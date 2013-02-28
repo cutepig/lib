@@ -72,6 +72,10 @@ class Pig_Config {
 		return $default;
 	}
 
+	static public function set($key, $value) {
+		self::$config[$key] = $value;
+	}
+
 	static public function get2($key, $default='') {
 		if(!self::$config)
 			return $default;
