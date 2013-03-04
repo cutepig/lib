@@ -148,19 +148,9 @@ class Pig_Pig {
 	*/
 	// This version uses DOM api
 	static function serializeToXml_DOM($object, $xml, $upperkey=null) {
-		if(is_array($object)) {
-			foreach($object as $value) {
-				$elem = $xml->ownerDocument->createElement($upperkey);
-				if(is_string($value) || is_numeric($value))	// i.e. simple element
-					$elem->appendChild($xml->ownerDocument->createTextNode($value));
-				else
-					self::serializeToXml_DOM($value, $elem, $upperkey);
-				$xml->appendChild($elem);
-			}
-		}
-		else if(is_object($object)) {
+		if(is_object($object) || (is_array($object) && self::is_assoc($object))) {
 			foreach($object as $key => $value) {
-				if(is_array($value)) { // Dont create a child-node explicitly
+				if(is_array($value) && !self::is_assoc($value)) { // Dont create a child-node explicitly
 					self::serializeToXml_DOM($value, $xml, $key);
 				}
 				else {
@@ -171,6 +161,16 @@ class Pig_Pig {
 						self::serializeToXml_DOM($value, $elem, $key);
 					$xml->appendChild($elem);
 				}
+			}
+		}
+		else if(is_array($object)) {
+			foreach($object as $value) {
+				$elem = $xml->ownerDocument->createElement($upperkey);
+				if(is_string($value) || is_numeric($value))	// i.e. simple element
+					$elem->appendChild($xml->ownerDocument->createTextNode($value));
+				else
+					self::serializeToXml_DOM($value, $elem, $upperkey);
+				$xml->appendChild($elem);
 			}
 		}
 		else if(is_string($object) || is_numeric($object)) {
@@ -234,5 +234,11 @@ class Pig_Pig {
 	    }
 
 	    return $result;
+	}
+
+	// Cheap version, not that reliable but enough
+	static public function is_assoc($arr) {
+		foreach($arr as $key => $value)
+			return !is_numeric($key);
 	}
 }
