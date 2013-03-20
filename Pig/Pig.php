@@ -185,7 +185,7 @@ class Pig_Pig {
 	 *
 	 * @return string Indented version of the original JSON string.
 	 */
-	static protected function indentJSON($json) {
+	static public function indentJSON($json) {
 
 	    $result      = '';
 	    $pos         = 0;
