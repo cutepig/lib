@@ -42,10 +42,14 @@ class Pig_Pig {
 		$id = base_convert($id, 10, 34);			// Convert from base-10 to base-34
 		$id = $id . $cs;							// Add checksum to the end
 		$id = strtr($id, array('1'=>'y', 'l'=>'z'));	// Change 1's to y's and lowercase l's to z's
+		$rn = mt_rand(0, 8);						// Create a random number indicator to the start of the string
+		$rn = ($rn === 0 ? $rn : $rn + 1);			// Eliminate '1' character
+		$id = $rn . $id;							// Add a number indicator to start
 		return $id;
 	}
 
 	public static function unhash($id) {
+		$id = substr($id, 1);							// remove the number indicator
 		$id = strtr($id, array('y'=>'1', 'z'=>'l'));	// Change y's to 1's and z's to lowercase l's
 		$oc = substr($id, -2);							// Grab the original checksum
 		$id = substr($id, 0, -2);						// Remove checksum from id
@@ -154,12 +158,18 @@ class Pig_Pig {
 					self::serializeToXml_DOM($value, $xml, $key);
 				}
 				else {
-					$elem = $xml->ownerDocument->createElement($key);
-					if(is_string($value) || is_numeric($value))	// i.e. simple element
-						$elem->appendChild($xml->ownerDocument->createTextNode($value));
-					else
-						self::serializeToXml_DOM($value, $elem, $key);
-					$xml->appendChild($elem);
+					// Check for special attr value
+					if((is_string($value) || is_numeric($value)) && substr($key, 0, 8) == '__attr__') {
+						$xml->setAttribute(substr($key, 8), $value);
+					}
+					else {
+						$elem = $xml->ownerDocument->createElement($key);
+						if(is_string($value) || is_numeric($value))	// i.e. simple element
+							$elem->appendChild($xml->ownerDocument->createTextNode($value));
+						else
+							self::serializeToXml_DOM($value, $elem, $key);
+						$xml->appendChild($elem);
+					}
 				}
 			}
 		}

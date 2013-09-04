@@ -27,7 +27,7 @@ class Pig_Autoloader {
 				$path = str_replace('\\', DIRECTORY_SEPARATOR, $class) . '.php';
 			else
 				$path = str_replace('_', DIRECTORY_SEPARATOR, $class) . '.php';
-			include $path;
+			@include $path;
 		});
 	}
 

@@ -84,4 +84,8 @@ class Pig_Slim_BaseHandler {
 	protected function getFullResourceUri() {
 		return $this->request->getRootUri() . $this->request->getResourceUri();
 	}
+
+	protected function halt($code) {
+		$this->app->halt($code, $_SESSION['_debug_']);
+	}
 }
