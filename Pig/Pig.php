@@ -37,7 +37,7 @@ class Pig_Pig {
 		// TODO: ROT13 for lolzors, problem is that we are messing 1->y and l->z, figure that out!
 		// TODO: Add 2-char checksum to the end
 		$id = str_pad($id, 10, '0', STR_PAD_LEFT);	// Pad left with zeros to fill 10 characters
-		$cs = str_pad(substr(hash('fnv132', $id), -2), 2, '0', STR_PAD_LEFT);	// Generate 2-char checksum, TODO: utilize this!
+		$cs = str_pad(substr(md5($id), -2), 2, '0', STR_PAD_LEFT);	// Generate 2-char checksum, TODO: utilize this!
 		$id = substr($id, 3) . substr($id, 0, 3);	// Turn 3 first numbers as last
 		$id = base_convert($id, 10, 34);			// Convert from base-10 to base-34
 		$id = $id . $cs;							// Add checksum to the end
@@ -56,7 +56,7 @@ class Pig_Pig {
 		$id = base_convert($id, 34, 10);				// Convert from base-34 to base-10
 		$id = str_pad($id, 10, '0', STR_PAD_LEFT);		// Left pad with zeros to fill 10 characters
 		$id = substr($id, 7) . substr($id, 0, 7);		// Turn 3 last numbers as first
-		$cs = str_pad(substr(hash('fnv132', $id), -2), 2, '0', STR_PAD_LEFT);	// Grab the checksum
+		$cs = str_pad(substr(md5($id), -2), 2, '0', STR_PAD_LEFT);	// Grab the checksum
 		$id = ltrim($id, '0');
 		return ($cs == $oc ? $id : false);
 	}
