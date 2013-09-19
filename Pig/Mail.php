@@ -49,7 +49,7 @@ class Pig_Mail {
 			$this->port = getservbyname('smtp', 'tcp');
 	}
 
-	public function send($headers, $contents, $attachments) {
+	public function send($headers, $contents, $attachments = false) {
 		if($this->socket === false)
 			$this->initConnection();
 
