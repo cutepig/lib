@@ -51,7 +51,7 @@ $app = new Slim\Slim(array(
 	// Uncomment view property to disable Twig
 	'view' => new Pig_Slim_TwigView('../views/', array(
 		'debug' => Pig_Config::get('twig.debug', PIG_ENVIRONMENT == 'devel'),
-		// 'cache' => Pig_Config::get('twig.cachedir', ../views/cache')
+		'cache' => Pig_Config::get('twig.cachedir', '../tmp/twig')
 	))
 ));
 $app->setName(Pig_Config::get('app.name', 'Pig example'));
