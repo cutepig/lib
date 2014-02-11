@@ -42,170 +42,266 @@
 		For example /foo-bar/ is mapped to FooBarHandler, GET /foo/bar-dude/ is mapped to FooHandler::getBarDude or FooHandler::barDude.
 
 		Root URL / is mapped to IndexHandler and its index action is called. (TODO: Allow configuration for the default handler!)
+
+	December 2013, v1.1:
+		Ugly porting of v2.0 autorouter to this version. 2.0 doesn't use Slim at all, so we had to fix it to utilize Slim and also
+		be fully compatible with the old v1.0 version. It now supports hierarchical handlers, folders within handlers directory.
+		Only thing is that IndexHandler isn't checked on these subdirectories, but rather make a xxxHandler to the parent folder
+		where the subdirectory xxx lies. For e.g.
+
+		/
+		/IndexHandler.php
+		/AdminHandler.php 	<-- Not /Admin/IndexHandler.php
+		/Admin
+		/Admin/UserHandler.php
+
+		Also unlike v2.0 we still support only 1 parameter for backwards compatibility. Rest of the parameters are simply just discarded.
+		The handler registered to Slim supports currently 8 parts on the resource uri, so you can make up to 5 levels or directories,
+		controller, method and parameter, or without method or parameter up to 7 levels of directories and controller (Remember that
+		IndexHandler isn't checked at all in subdirectories, this is the behaviour of v2.0 anyway and doesn't require backwards
+		compatibility to v1.0).
 */
 
 class Pig_Slim_Autorouter {
 	protected $app;
-	protected $pathToHandlers;
+	protected $handlersDir;
+	protected $namespace;
 
-	public function __construct($app, $pathToHandlers=false) {
+	public function __construct($app, $handlersDir=false, $namespace=false) {
+		if($handlersDir === false)
+			$handlersDir = '..' . DIRECTORY_SEPARATOR . 'handlers';	// Default
+
 		$this->app = $app;
-		$this->pathToHandlers = $pathToHandlers;	// TODO: Normalize?
+		$this->handlersDir = realpath($handlersDir);
+		$this->namespace = $namespace !== false ? $namespace : '';
 
-		// FIXME: This fails with /foo/ or /foo/bar/
-		$app->get('/(:controller(/:action(/:parameter)))', array($this, 'requestHandler'));
-		$app->post('/(:controller(/:action(/:parameter)))', array($this, 'requestHandler'));
-		$app->put('/(:controller(/:action(/:parameter)))', array($this, 'requestHandler'));
-		$app->delete('/(:controller(/:action(/:parameter)))', array($this, 'requestHandler'));
+		$self = $this;
+		$app->map('/(:foobar+)', function($foobar = false) use($app, $self) {
+			$self->callRequestedHandler();
+		})->via('GET', 'POST', 'PUT', 'DELETE');
 
+/*
 		// For aesthetic reasons, allow /foo/, /foo/bar/ and /foo/bar/123/
-		$app->get('/:controller/(:action/(:parameter/))', array($this, 'requestHandler'));
-		$app->post('/:controller/(:action/(:parameter/))', array($this, 'requestHandler'));
-		$app->put('/:controller/(:action/(:parameter/))', array($this, 'requestHandler'));
-		$app->delete('/:controller/(:action/(:parameter/))', array($this, 'requestHandler'));
+		$app->map('/(:a(/:b(/:c(/:d(/:e(/:f(/:g(/:h/))))))))', function(
+			$a=null, $b=null, $c=null, $d=null, $e=null, $f=null, $g=null, $h=null) use($app, $self) {
+			$self->callRequestedHandler();
+		})->via('GET', 'POST', 'PUT', 'DELETE');
+*/
 	}
 
-	public function requestHandler($controller=null, $action=null, $parameter=null) {
-		$method = strtolower($this->app->request()->getMethod());
-
-		if(is_null($controller) || preg_match("/^#/", $controller)) {	// handler for /
-			$handler = 'IndexHandler';
-			$functions = array("{$method}Index", 'index');
-			$parameters = array(null, null);
-		}
-		else if(is_null($action) || preg_match("/^#/", $action)) {	// handler for /controller
-			$handler = $this->capitalizeName($controller, true) . 'Handler';	// FIXME: capitalize
-			$functions = array("{$method}Index", 'index');
-			$parameters = array(null, null);
-		}
-		else if(is_null($parameter) || preg_match("/^#/", $parameter)) {	// handler for /controller/action or /controller/parameter
-			$handler = $this->capitalizeName($controller, true) . 'Handler';
-			$functions = array("{$method}{$this->capitalizeName($action, true)}", $this->capitalizeName($action, false), "{$method}Index", 'index');
-			$parameters = array(null, null, $action, $action);
-		}
-		else {	// handler for /controller/action/parameter
-			$handler = $this->capitalizeName($controller, true) . 'Handler';
-			$functions = array("{$method}{$this->capitalizeName($action, true)}", $this->capitalizeName($action, false));
-			$parameters = array($parameter, $parameter);
-		}
-
-		if(count($functions) != count($parameters))
-			$this->app->notFound();
+	public function tryHandler($cls, $method, $params) {
+		$classPath = $this->handlersDir . DIRECTORY_SEPARATOR . str_replace('_', DIRECTORY_SEPARATOR, $cls) . '.php';
+		debug(array(
+			'Class' => $cls,
+			'Method' => $method,
+			'Params' => $params,
+			'Path' => $classPath
+		));
 		
-		// debug(array('handler'=>$handler,'functions'=>$functions,'parameters'=>$parameters));
-
-		// FIXME: class_exists calls autoloader by default, omitting it would mean that we would handle the loading ourselves
-
-		// Load the handler class or let autoloader take care of it
-		$filename = "{$this->pathToHandlers}/{$handler}.php";
-		if($this->pathToHandlers && !class_exists($handler) && file_exists($filename)) {
-			// debug("Including $filename");
-			include($filename);
-		}
-
-		// Use this method (no pun intended!) with in_array instead of method_exists which returns true on protected/private methods!
-		$methods = get_class_methods($handler);
-		
-		for($i = 0; $i < count($functions); $i++) {
-			$fn = $functions[$i];
-			// HACKETY HACK HACK
-			if($fn[0] == '_' || $fn == $handler)
-				continue;
-
-			if(in_array($fn, $methods)) {
-				$obj = new $handler($this->app);
-				if(is_null($parameters[$i]))
-					call_user_func(array($obj, $fn));
+		if(file_exists($classPath)) {
+			require_once($classPath);
+			if(class_exists($cls) && method_exists($cls, $method)) {
+				$o = new $cls($this->app);
+				debug("Calling $cls::$method");
+				if(!count($params))
+					call_user_func(array($o, $method));
 				else
-					call_user_func(array($obj, $fn), $parameters[$i]);
+					call_user_func(array($o, $method), $params[0]);
+				debug('OK');
 
 				// Emit debug after the handler has processed its output
 				if(isset($_SESSION['_debug_'])) {
 					echo $_SESSION['_debug_'];
 					unset($_SESSION['_debug_']);
 				}
-				return;
+				return true;
 			}
 		}
+
+		debug('NOPE');
+		return false;
+	}
+
+	public function callRequestedHandler() {
+		$resource = $this->app->request()->getResourceUri();
+		// $left = explode('/', preg_replace('/^\//', '', $resource));
+		$left = explode('/', trim($resource, '/'));
+		$right = array();
+
+		// Trim empty items
+		if(count($left) && $left[0] === '')
+			array_shift($left);
+		
+		// Support SOAP calls as in v1.0 where you simply ignore the parts that follow after #
+		$soapTest = true;
+		$left = array_filter($left, function($x) use($soapTest) {
+			return ($soapTest = ($soapTest && !preg_match('/^#/', $x)));
+		});
+		debug($left);
+		
+		$self = __CLASS__;
+		while(count($left) >= 0) {
+			debug(array(
+				'Left' => $left,
+				'Right' => $right
+			));
+
+			// Form the classname
+			if(count($left)) {
+				$cls = implode('_', array_map(function($x) use($self) {
+					return $self::camelCasePart($x, true);
+				}, $left)) . 'Handler';
+			}
+			else 
+ 				$cls = 'IndexHandler';
+
+ 			if($this->namespace)
+ 				$cls = $this->namespace . '_' . $cls;
+
+ 			// Method and parameters
+ 			$method = (count($right) && $right[0] !== '' ? $right[0] : 'index');
+			$params = array_slice($right, 1);
+ 			$httpMethod = strtolower($this->app->request()->getMethod());
+
+ 			// FIXME: Move these 2 blocks to separate function
+ 			// Try method as a method name first
+ 			if($method !== 'index') {
+ 				// Explicit method
+ 				if($this->tryHandler($cls, $httpMethod . self::camelCasePart($method, true), $params))
+ 					return true;
+ 				// Non-explicit method
+ 				if($this->tryHandler($cls, self::camelCasePart($method, false), $params))
+ 					return true;
+ 			}
+			
+			// Use index as method, move method to parameters
+			if($method !== 'index')
+				array_unshift($params, $method);
+			// Explicit method
+			if($this->tryHandler($cls, $httpMethod . 'Index', $params))
+				return true;
+			// Non-explicit method
+			if($this->tryHandler($cls, 'index', $params))
+				return true;
+			
+			if(!count($left))
+				break;
+			
+			array_unshift($right, array_pop($left));
+		}
+
+		debug("Failed to find handler for $resource");
 		
 		if(isset($_SESSION['_debug_'])) {
 			echo $_SESSION['_debug_'];
 			unset($_SESSION['_debug_']);
 		}
-		$this->app->notFound();
+		// $this->app->notFound();
+		return false;
 	}
+
 
 	// Requires the directory of handlers as parameter
 	// Returns list of strings of form "METHOD url"
-	public static function getHandlers($pathToHandlers) {
-		$handlers = array();
-		$dir = opendir($pathToHandlers);
-		while(($entry = readdir($dir)) != false) {
-			$file = $pathToHandlers . '/' . $entry;
-			// debug($file);
-			if(is_file($file)) {
-				$pathinfo = pathinfo($file);
-				if($pathinfo['extension'] == 'php') {
-					$cls = $pathinfo['filename'];
-					if(!class_exists($cls))
-						include($file);
-					$methods = get_class_methods($cls);
-					// Strip methods
-					$_methods = array();
-					foreach($methods as $method) {
-						if($method[0] != '_' && $method != $cls && $method[0] == strtolower($method[0])) {
-							// FIXME: We aren't back-converting the capitalizations correctly in all cases
-							if(preg_match('/get/', $method))
-								$_methods[] = array('GET', self::uncapitalizeName(substr($method, 3)));
-							else if(preg_match('/post/', $method))
-								$_methods[] = array('POST', self::uncapitalizeName(substr($method, 4)));
-							else if(preg_match('/put/', $method))
-								$_methods[] = array('PUT', self::uncapitalizeName(substr($method, 3)));
-							else if(preg_match('/delete/', $method))
-								$_methods[] = array('DELETE', self::uncapitalizeName(substr($method, 6)));
-							else
-								$_methods[] = array('*', self::uncapitalizeName($method, false));
-						}
-					}
-					$methods = $_methods;
+	public static function getHandlers($handlersDir, $namespace = false) {
+		$dir = $handlersDir . DIRECTORY_SEPARATOR . str_replace('\\', DIRECTORY_SEPARATOR, $namespace);
+		$files = self::getHandlersInner($dir);
+		debug(array('readHandlersInner' => $files));
 
-					$handler = self::uncapitalizeName(preg_replace('/(Handler)$/', '', $cls));
-					foreach($methods as $method) {
-						if($method[1] == 'index')
-							$method[1] = '';
-						$handlers[] = "{$method[0]} /{$handler}/{$method[1]}";
-					}
+		// Fix the $dir out of these
+		(substr($dir, -1) !== DIRECTORY_SEPARATOR) && ($dir .= DIRECTORY_SEPARATOR);
+
+		$handlers = array();
+		$len = strlen($dir);
+		foreach($files as $file) {
+			// Collect the relative path
+			$f = substr($file, $len);
+
+			// Remove the extension
+			$f = preg_replace('/\.[^$]*/', '', $f);
+
+			// Replace / with _ to make it into class name
+			$ns = ($namespace !== false) ? $namespace . '_' : '';
+			$cls = $ns . trim(str_replace(DIRECTORY_SEPARATOR, '_', $f), '_');
+			echo "Including $file for class $cls\n";
+			include_once($file);
+
+			$methods = get_class_methods($cls);
+			// Strip methods
+			$_methods = array();
+			foreach($methods as $method) {
+				if($method[0] != '_' && $method !== $cls && $method[0] === strtolower($method[0])) {
+					// FIXME: We aren't back-converting the capitalizations correctly in all cases
+					if(preg_match('/get/', $method))
+						$_methods[] = array('GET', self::unCamelCasePart(substr($method, 3)));
+					else if(preg_match('/post/', $method))
+						$_methods[] = array('POST', self::unCamelCasePart(substr($method, 4)));
+					else if(preg_match('/put/', $method))
+						$_methods[] = array('PUT', self::unCamelCasePart(substr($method, 3)));
+					else if(preg_match('/delete/', $method))
+						$_methods[] = array('DELETE', self::unCamelCasePart(substr($method, 6)));
+					else
+						$_methods[] = array('*', self::unCamelCasePart($method, false));
 				}
+			}
+			$methods = $_methods;
+
+			$urlFriendly = str_replace('_', '/', ltrim($cls, $ns));
+			$handler = self::unCamelCasePart(preg_replace('/(Handler)$/', '', $urlFriendly));
+			foreach($methods as $method) {
+				if($method[1] == 'index')
+					$method[1] = '';
+				$handlers[] = "{$method[0]} /{$handler}/{$method[1]}";
 			}
 		}
 
 		return $handlers;
 	}
 
-	public static function debugListHandlers($pathToHandlers) {
-		$handlers = self::getHandlers($pathToHandlers);
+	protected static function getHandlersInner($dir) {
+		// FIXME: strip the root here!
+		$files = scandir($dir);
+		$files2 = array();
+		if($files !== false) {
+			// Recurse
+			foreach($files as $file) {
+				if($file == '.' || $file == '..')
+					continue;
+				$path = $dir . DIRECTORY_SEPARATOR . $file;
+				if(is_dir($path))
+					$files2 = array_merge($files2, self::getHandlersInner($path));
+				else {
+					$pi = pathinfo($path);
+					if($pi['extension'] === 'php')
+						$files2[] = $path;	// FIXME: Convert to class name and confirm it exists
+				}
+			}
+		}
+
+		return $files2;
+	}
+
+	public static function debugListHandlers($pathToHandlers, $namespace = false) {
+		$handlers = self::getHandlers($pathToHandlers, $namespace);
 		foreach($handlers as $handler)
 			debug($handler);
 	}
 
-	// If isController is true, capitalize the first letter, else lowercase the first letter
-	protected function capitalizeName($str, $isController) {
+	protected static function camelCasePart($part, $ucFirst) {
 		// Strip the - markers from the beginning and end of the name (This is silly..)
-		// $str = trim($str, '-');
+		// $part = trim($part, '-');
 
 		// Convert to worlds for ucwords and then capitalize
-		$words = str_replace('-', ' ', strtolower($str));
+		$words = str_replace('-', ' ', strtolower($part));
 		$capitalized = str_replace(' ', '', ucwords($words));
-		if(!$isController)
+		if(!$ucFirst)
 			return lcfirst($capitalized);
 		return $capitalized;
-
 	}
 
-	// Used for debugListHandlers
-	protected static function uncapitalizeName($str) {
+	protected static function unCamelCasePart($part) {
 		// Convert the first character to lowercase so we dont create a name starting with -
-		$str = lcfirst($str);
-		return preg_replace('/([A-Z]+)/e', "'-'.strtolower('$1')", $str);
+		$part = lcfirst($part);
+		return strtolower(preg_replace('/^\/([A-Z]+)/e', "'-'.'$1'", $part));
 	}
 }

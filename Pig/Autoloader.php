@@ -48,6 +48,7 @@ class Pig_Autoloader {
 
 // Dirty hack but thats OK, since require 'Pig/Autoloader' is a must in here,
 // this comes in automagically!
+$_SESSION['_debug_'] = '';
 function debug() {
 	// Do we debug?
 	if(!defined('PIG_ENVIRONMENT') || PIG_ENVIRONMENT != 'devel')
