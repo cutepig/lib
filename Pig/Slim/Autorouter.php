@@ -101,20 +101,22 @@ class Pig_Slim_Autorouter {
 		if(file_exists($classPath)) {
 			require_once($classPath);
 			if(class_exists($cls) && method_exists($cls, $method)) {
-				$o = new $cls($this->app);
-				debug("Calling $cls::$method");
-				if(!count($params))
-					call_user_func(array($o, $method));
-				else
-					call_user_func(array($o, $method), $params[0]);
-				debug('OK');
+				$rm = new \ReflectionMethod($cls, $method);
+				if(	(count($params) > 0 && $rm->getNumberOfParameters() > 0) ||
+					(!count($params) && !$rm->getNumberOfRequiredParameters()))
+				{
+					$o = new $cls($this->app);
+					debug("Calling $cls::$method");
+					call_user_func_array(array($o, $method), $params);
+					debug('OK');
 
-				// Emit debug after the handler has processed its output
-				if(isset($_SESSION['_debug_'])) {
-					echo $_SESSION['_debug_'];
-					unset($_SESSION['_debug_']);
+					// Emit debug after the handler has processed its output
+					if(isset($_SESSION['_debug_'])) {
+						echo $_SESSION['_debug_'];
+						unset($_SESSION['_debug_']);
+					}
+					return true;
 				}
-				return true;
 			}
 		}
 
