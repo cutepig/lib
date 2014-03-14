@@ -91,13 +91,14 @@ class Pig_Slim_Autorouter {
 
 	public function tryHandler($cls, $method, $params) {
 		$classPath = $this->handlersDir . DIRECTORY_SEPARATOR . str_replace('_', DIRECTORY_SEPARATOR, $cls) . '.php';
+		/*
 		debug(array(
 			'Class' => $cls,
 			'Method' => $method,
 			'Params' => $params,
 			'Path' => $classPath
 		));
-		
+		*/		
 		if(file_exists($classPath)) {
 			require_once($classPath);
 			if(class_exists($cls) && method_exists($cls, $method)) {
@@ -106,9 +107,8 @@ class Pig_Slim_Autorouter {
 					(!count($params) && !$rm->getNumberOfRequiredParameters()))
 				{
 					$o = new $cls($this->app);
-					debug("Calling $cls::$method");
+					// debug("Calling $cls::$method");
 					call_user_func_array(array($o, $method), $params);
-					debug('OK');
 
 					// Emit debug after the handler has processed its output
 					if(isset($_SESSION['_debug_'])) {
@@ -120,7 +120,6 @@ class Pig_Slim_Autorouter {
 			}
 		}
 
-		debug('NOPE');
 		return false;
 	}
 
@@ -139,14 +138,16 @@ class Pig_Slim_Autorouter {
 		$left = array_filter($left, function($x) use($soapTest) {
 			return ($soapTest = ($soapTest && !preg_match('/^#/', $x)));
 		});
-		debug($left);
+		// debug($left);
 		
 		$self = __CLASS__;
 		while(count($left) >= 0) {
+			/*
 			debug(array(
 				'Left' => $left,
 				'Right' => $right
 			));
+			*/
 
 			// Form the classname
 			if(count($left)) {
@@ -192,7 +193,7 @@ class Pig_Slim_Autorouter {
 			array_unshift($right, array_pop($left));
 		}
 
-		debug("Failed to find handler for $resource");
+		// debug("Failed to find handler for $resource");
 		
 		if(isset($_SESSION['_debug_'])) {
 			echo $_SESSION['_debug_'];
@@ -208,7 +209,7 @@ class Pig_Slim_Autorouter {
 	public static function getHandlers($handlersDir, $namespace = false) {
 		$dir = $handlersDir . DIRECTORY_SEPARATOR . str_replace('\\', DIRECTORY_SEPARATOR, $namespace);
 		$files = self::getHandlersInner($dir);
-		debug(array('readHandlersInner' => $files));
+		// debug(array('readHandlersInner' => $files));
 
 		// Fix the $dir out of these
 		(substr($dir, -1) !== DIRECTORY_SEPARATOR) && ($dir .= DIRECTORY_SEPARATOR);
@@ -289,7 +290,8 @@ class Pig_Slim_Autorouter {
 			debug($handler);
 	}
 
-	protected static function camelCasePart($part, $ucFirst) {
+	// ch : Made public for older PHP versions accessing protected functions from closures
+	public static function camelCasePart($part, $ucFirst) {
 		// Strip the - markers from the beginning and end of the name (This is silly..)
 		// $part = trim($part, '-');
 

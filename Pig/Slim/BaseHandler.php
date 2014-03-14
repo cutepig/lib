@@ -78,7 +78,7 @@ class Pig_Slim_BaseHandler {
 
 	// Helper redirect function that redirects to this webapps resource
 	protected function redirect($resource) {
-		$this->response->redirect($this->request->getRootUri() . $resource);
+		$this->app->redirect($this->request->getRootUri() . $resource);
 	}
 
 	protected function getFullResourceUri() {
