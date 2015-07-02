@@ -210,7 +210,9 @@ class Pig_Mail {
 
 	protected function initConnection() {
 		// open up the connection
-		$s = stream_socket_client("tcp://{$this->smtp}:{$this->port}", $errno, $errstr, 30);
+		$s = stream_socket_client("tcp://{$this->smtp}:{$this->port}", $errno, $errstr, 10);
+		if($s === false)
+			throw new Exception("Failed:\n(Connect)\n$errstr");
 		$this->socket = $s;
 
 		// Read the initial response
@@ -309,7 +311,10 @@ class Pig_Mail {
 		$to = $this->headers['To'];
 		$subject = $this->headers['Subject'];
 		// FIXME: Include attachments to the equation
-		$boundary = (count($this->contents) > 1) ? mt_rand(1000000000, 1999999999) : false;
+		$boundary = (count($this->contents) > 1) ||
+				(is_array($this->attachments) && count($this->attachments) > 0)
+			? mt_rand(1000000000, 1999999999)
+			: false;
 
 		// Data command
 		$m = "DATA\r\n";
@@ -351,11 +356,18 @@ class Pig_Mail {
 
 		//
 		// Attachments -- FIXME: for each attachment
-		// $m .= "Content-Transfer-Encoding: base64\r\n";
-		// $m .= "Content-Type: text/plain; name=\"Here2.txt\"\r\n";
-		// $m .= "Content-Disposition: attachment; filename=\"Here2.txt\"\r\n";
-		// $m .= "\r\n{$data}\r\n";	// Data should be base64 encoded, with some special format
-		// $m .= "\r\n--boundary-type-{$boundary}-alt\r\n";
+		if($this->attachments) {
+			foreach($this->attachments as $attachment) {
+				$type = $attachment['Content-Type'];
+				$name = $attachment['Name'];
+				$content = chunk_split(base64_encode($attachment['Content']));
+				$m .= "Content-Transfer-Encoding: base64\r\n";
+				$m .= "Content-Type: {$type}; name=\"{$name}\"\r\n";
+				$m .= "Content-Disposition: attachment; filename=\"{$name}\"\r\n";
+				$m .= "\r\n{$content}\r\n";		// Data should be base64 encoded, with some special format
+				$m .= "\r\n--boundary-type-{$boundary}-alt\r\n";
+			}
+		}
 		
 		// End
 		$m .= "\r\n.\r\n";
